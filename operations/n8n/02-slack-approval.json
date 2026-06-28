@@ -1,0 +1,87 @@
+{
+  "name": "02 Slack承認 - GitHub記事化開始",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "auto-ai-memo-approve-SET_SLACK_INTERACTION_SECRET",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "slack-interaction-webhook",
+      "name": "Slack採用Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "auto-ai-memo-approval"
+    },
+    {
+      "parameters": {
+        "jsCode": "const source=$input.first().json;\nconst raw=source.body?.payload ?? source.payload;\nif(!raw) throw new Error('Slack payload is missing');\nconst payload=typeof raw==='string'?JSON.parse(raw):raw;\nconst action=payload.actions?.[0];\nif(action?.action_id!=='approve_article') throw new Error('Unsupported Slack action');\nconst allowed='SET_SLACK_APPROVER_IDS'.split(',').map(v=>v.trim()).filter(Boolean);\nif(!allowed.includes(payload.user?.id)) throw new Error('This Slack user is not allowed to approve articles');\nconst issueNumber=Number(action.value);\nif(!Number.isInteger(issueNumber)||issueNumber<1) throw new Error('Invalid GitHub issue number');\nreturn [{json:{issueNumber,approverId:payload.user.id,responseUrl:payload.response_url}}];"
+      },
+      "id": "validate-approval",
+      "name": "Slack承認を検証",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { response_type: 'ephemeral', text: '採用を受け付けました。記事と見出し画像の生成を開始します。' } }}",
+        "options": {}
+      },
+      "id": "respond-slack",
+      "name": "Slackへ即時応答",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "method": "POST",
+        "url": "={{ 'https://api.github.com/repos/projectsn005-wq/Auto-AI-Memo/issues/' + $json.issueNumber + '/comments' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Accept", "value": "application/vnd.github+json"},
+            {"name": "X-GitHub-Api-Version", "value": "2022-11-28"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({body:'/採用\\n\\nSlack承認者: <@' + $json.approverId + '>'}) }}",
+        "options": {}
+      },
+      "id": "comment-approve",
+      "name": "GitHubへ採用コメント",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 0],
+      "credentials": {
+        "githubApi": {
+          "id": "SET_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Slack採用Webhook": {
+      "main": [[{"node": "Slack承認を検証", "type": "main", "index": 0}]]
+    },
+    "Slack承認を検証": {
+      "main": [[{"node": "Slackへ即時応答", "type": "main", "index": 0}]]
+    },
+    "Slackへ即時応答": {
+      "main": [[{"node": "GitHubへ採用コメント", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Tokyo"
+  }
+}

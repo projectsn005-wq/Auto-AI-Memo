@@ -20,11 +20,13 @@
 | n8n | スケジュール、外部サービス連携、通知 |
 | Codex Action | 採用後の記事草稿作成 |
 | GitHub | Issue承認、PRレビュー、記事保管 |
-| Slack | 提案通知と運用状況の共有 |
+| Slack | 提案通知、採用操作、運用状況の共有 |
+| OpenAI Image API | note見出し画像の生成 |
 
 ## 記事
 
 - 記事は`articles/`へMarkdownで保存する。
+- 見出し画像は`articles/assets/`、noteへ渡す成果物は`note-package/`へ保存する。
 - frontmatterには`id`、`title`、`category`、`version`、`review_status`、`public`、`post_to`を含める。
 - 捏造した体験談・実績・出典を入れない。
 - 結論を先に置き、抽象と具体を往復する。

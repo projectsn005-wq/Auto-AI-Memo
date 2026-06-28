@@ -65,7 +65,13 @@
       "name": "Claudeで記事提案",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [500, 80]
+      "position": [500, 80],
+      "credentials": {
+        "anthropicApi": {
+          "id": "SET_ANTHROPIC_CREDENTIAL_ID",
+          "name": "Anthropic API"
+        }
+      }
     },
     {
       "parameters": {
@@ -91,11 +97,17 @@
       "name": "GitHub Issue作成",
       "type": "n8n-nodes-base.github",
       "typeVersion": 1,
-      "position": [1020, 80]
+      "position": [1020, 80],
+      "credentials": {
+        "githubApi": {
+          "id": "SET_GITHUB_CREDENTIAL_ID",
+          "name": "GitHub API"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(item=>({json:{slackBody:JSON.stringify({channel:'SET_SLACK_CHANNEL_ID',text:'新しい記事提案: '+item.json.title+'\\n'+item.json.html_url})}}));"
+        "jsCode": "return $input.all().map(item=>{const issue=String(item.json.number);const title=item.json.title;const url=item.json.html_url;return {json:{slackBody:JSON.stringify({channel:'SET_SLACK_CHANNEL_ID',text:'新しい記事提案: '+title,blocks:[{type:'section',text:{type:'mrkdwn',text:'*'+title+'*\\n<'+url+'|GitHub Issueを開く>'}},{type:'actions',elements:[{type:'button',action_id:'approve_article',text:{type:'plain_text',text:'採用して記事化'},style:'primary',value:issue,confirm:{title:{type:'plain_text',text:'記事化しますか？'},text:{type:'mrkdwn',text:'Codexで記事と見出し画像を生成します。'},confirm:{type:'plain_text',text:'採用'},deny:{type:'plain_text',text:'戻る'}}}]}]})}};});"
       },
       "id": "build-slack",
       "name": "Slack通知を組み立て",
@@ -121,7 +133,13 @@
       "name": "Slackへ通知",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1540, 80]
+      "position": [1540, 80],
+      "credentials": {
+        "slackApi": {
+          "id": "SET_SLACK_CREDENTIAL_ID",
+          "name": "Slack API"
+        }
+      }
     }
   ],
   "connections": {
