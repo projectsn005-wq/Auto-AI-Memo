@@ -1,0 +1,137 @@
+{
+  "name": "01 週次記事提案 - Claude to GitHub and Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-weekly",
+      "name": "毎週月曜9時",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "auto-ai-memo-proposals",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "manual-webhook",
+      "name": "手動テストWebhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 180],
+      "webhookId": "auto-ai-memo-proposals"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = `あなたは「再現性研究所」の編集者です。成果を才能ではなく仕組みで再現することをテーマに、AI活用、仕組み化、組織学習、投資対効果、再現性設計から重複しない記事提案を3本作ってください。各提案は title, summary（300字以内）, claim（一文）, target を持つJSON配列にし、JSONだけを返してください。`;\nreturn [{json:{requestBody:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})}}];"
+      },
+      "id": "build-request",
+      "name": "Claudeリクエスト作成",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "anthropic-version", "value": "2023-06-01"},
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.requestBody }}",
+        "options": {"timeout": 120000}
+      },
+      "id": "claude-proposals",
+      "name": "Claudeで記事提案",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "const text=$input.first().json.content?.[0]?.text;\nif(!text) throw new Error('Claude response has no text');\nconst cleaned=text.replace(/^```(?:json)?\\s*/i,'').replace(/```\\s*$/,'').trim();\nconst proposals=JSON.parse(cleaned);\nif(!Array.isArray(proposals)||proposals.length!==3) throw new Error('Expected exactly 3 proposals');\nreturn proposals.map(p=>({json:{title:'[提案] '+p.title,body:'## 概要\\n'+p.summary+'\\n\\n## 主張\\n'+p.claim+'\\n\\n## 想定読者\\n'+p.target+'\\n\\n---\\n_n8n weekly proposal by Claude_'}}));"
+      },
+      "id": "parse-proposals",
+      "name": "提案JSONを展開",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 80]
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "owner": "projectsn005-wq",
+        "repository": "Auto-AI-Memo",
+        "title": "={{ $json.title }}",
+        "body": "={{ $json.body }}",
+        "additionalFields": {"labels": ["提案"]}
+      },
+      "id": "create-issue",
+      "name": "GitHub Issue作成",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [1020, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item=>({json:{slackBody:JSON.stringify({channel:'SET_SLACK_CHANNEL_ID',text:'新しい記事提案: '+item.json.title+'\\n'+item.json.html_url})}}));"
+      },
+      "id": "build-slack",
+      "name": "Slack通知を組み立て",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1280, 80]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "method": "POST",
+        "url": "https://slack.com/api/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json; charset=utf-8"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.slackBody }}",
+        "options": {}
+      },
+      "id": "notify-slack",
+      "name": "Slackへ通知",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 80]
+    }
+  ],
+  "connections": {
+    "毎週月曜9時": {"main": [[{"node": "Claudeリクエスト作成", "type": "main", "index": 0}]]},
+    "手動テストWebhook": {"main": [[{"node": "Claudeリクエスト作成", "type": "main", "index": 0}]]},
+    "Claudeリクエスト作成": {"main": [[{"node": "Claudeで記事提案", "type": "main", "index": 0}]]},
+    "Claudeで記事提案": {"main": [[{"node": "提案JSONを展開", "type": "main", "index": 0}]]},
+    "提案JSONを展開": {"main": [[{"node": "GitHub Issue作成", "type": "main", "index": 0}]]},
+    "GitHub Issue作成": {"main": [[{"node": "Slack通知を組み立て", "type": "main", "index": 0}]]},
+    "Slack通知を組み立て": {"main": [[{"node": "Slackへ通知", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "timezone": "Asia/Tokyo"}
+}

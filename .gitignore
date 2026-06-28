@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.codex-input/
+codex-final.md

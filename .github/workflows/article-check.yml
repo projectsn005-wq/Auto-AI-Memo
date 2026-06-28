@@ -1,0 +1,24 @@
+name: Article Quality Check
+
+on:
+  pull_request:
+    paths:
+      - 'articles/*.md'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate changed articles
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git diff --name-only --diff-filter=AM "origin/${{ github.base_ref }}...HEAD" -- 'articles/*.md')
+          test "${#files[@]}" -gt 0
+          for file in "${files[@]}"; do
+            python3 scripts/validate_article.py "$file"
+          done
