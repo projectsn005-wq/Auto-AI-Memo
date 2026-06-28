@@ -1,0 +1,40 @@
+name: Deploy n8n workflows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'operations/n8n/**'
+      - 'scripts/deploy_n8n.py'
+      - '.github/workflows/deploy-n8n.yml'
+
+concurrency:
+  group: deploy-n8n-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Ensure proposal label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh label create '提案' --color '1D76DB' --description 'n8nが生成した記事提案' --force
+
+      - name: Deploy and activate workflows
+        env:
+          N8N_BASE_URL: ${{ secrets.N8N_BASE_URL }}
+          N8N_API_TOKEN: ${{ secrets.N8N_API_TOKEN }}
+          N8N_ANTHROPIC_CREDENTIAL_ID: ${{ secrets.N8N_ANTHROPIC_CREDENTIAL_ID }}
+          N8N_GITHUB_CREDENTIAL_ID: ${{ secrets.N8N_GITHUB_CREDENTIAL_ID }}
+          N8N_SLACK_CREDENTIAL_ID: ${{ secrets.N8N_SLACK_CREDENTIAL_ID }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_APPROVER_IDS: ${{ secrets.SLACK_APPROVER_IDS }}
+          SLACK_INTERACTION_SECRET: ${{ secrets.SLACK_INTERACTION_SECRET }}
+        run: python3 scripts/deploy_n8n.py
