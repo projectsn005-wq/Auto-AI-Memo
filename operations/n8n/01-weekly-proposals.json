@@ -34,7 +34,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const prompt = `あなたは「再現性研究所」の編集者です。成果を才能ではなく仕組みで再現することをテーマに、AI活用、仕組み化、組織学習、投資対効果、再現性設計から重複しない記事提案を3本作ってください。各提案は title, summary（300字以内）, claim（一文）, target を持つJSON配列にし、JSONだけを返してください。`;\nreturn [{json:{requestBody:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})}}];"
+        "jsCode": "const prompt = `あなたは「再現性研究所」の編集者です。成果を才能ではなく仕組みで再現することをテーマに、AI活用、仕組み化、組織学習、投資対効果、再現性設計から重複しない記事提案を3本作ってください。各提案は title, summary（300字以内）, claim（一文）, target を持つJSON配列にし、JSONだけを返してください。`;\nreturn [{json:{requestBody:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:prompt}]})}}];"
       },
       "id": "build-request",
       "name": "Claudeリクエスト作成",
