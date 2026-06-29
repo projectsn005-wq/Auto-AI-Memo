@@ -2,6 +2,11 @@ name: E2E smoke test
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/e2e-smoke-test.yml'
+      - 'scripts/e2e_smoke_test.py'
 
 concurrency:
   group: e2e-smoke-test
