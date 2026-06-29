@@ -110,14 +110,19 @@ def list_recent_proposal_issues(since_iso: str) -> list[dict[str, Any]]:
     query = urllib.parse.urlencode(
         {
             "state": "open",
-            "labels": "提案",
             "since": since_iso,
             "per_page": "10",
         }
     )
     url = f"https://api.github.com/repos/{repo}/issues?{query}"
     issues = request_json("GET", url, headers=github_headers())
-    return [issue for issue in issues if "pull_request" not in issue]
+    proposal_prefix = "[\u63d0\u6848]"
+    return [
+        issue
+        for issue in issues
+        if "pull_request" not in issue
+        and str(issue.get("title", "")).startswith(proposal_prefix)
+    ]
 
 
 def n8n_headers() -> dict[str, str]:
