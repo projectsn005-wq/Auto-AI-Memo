@@ -65,12 +65,15 @@ n8nのワークフローへ次を接続します。
 
 ## GitHub側の確認
 
-1. n8nの週次提案ワークフローを手動実行する。
-2. Slackの`採用して記事化`ボタンを押す。
-3. `Article Writer with Codex`が成功することを確認。
-4. 記事生成PRが自動マージされることを確認する。
-5. `Sync content ledger to Google Sheets`が成功し、管理台帳がGoogle Sheetsへ反映されることを確認する。
-6. Actionsの成果物からnote投稿パッケージを取得する。
+1. GitHub Actionsの`E2E smoke test`を実行する。
+2. GitHub IssueとSlack提案通知が作成されることを確認する。
+3. Slackの`採用して記事化`ボタンを押す。
+4. `Article Writer with Codex`が成功することを確認。
+5. 記事生成PRが自動マージされることを確認する。
+6. `Sync content ledger to Google Sheets`が成功し、管理台帳がGoogle Sheetsへ反映されることを確認する。
+7. Actionsの成果物からnote投稿パッケージを取得する。
+
+`E2E smoke test`が失敗した場合は、ActionsログとSlackへn8n最新Executionの診断情報が出ます。n8n画面へログインして手動で探す前に、このログで失敗ノードと認証不足を切り分けます。
 
 ## n8nのプラン画面
 

@@ -30,6 +30,14 @@ Claude Codeはリポジトリの開発・保守担当です。自動実行時の
 3. 表示されたURLをSlack AppのInteractivity Request URLへ設定する。
 4. 以後はSlackの採用ボタンだけで、記事・画像・note投稿用ZIP相当の成果物まで生成される。
 
+## 実働テスト
+
+`E2E smoke test`を実行すると、n8nの提案Webhookを起動し、GitHub Issue作成とn8n最新Executionの状態を自動確認します。
+
+失敗した場合は、n8n Public APIから最新Executionを取得し、GitHub ActionsログとSlackへ診断結果を出します。n8n画面にログインして手動で探す前に、このログでClaude認証、GitHub認証、Slack通知などの失敗箇所を切り分けます。
+
+このテストはSlackの採用ボタンまでは押しません。採用ボタンが唯一の人間承認ゲートです。
+
 ## note公開について
 
 noteには一般利用者向けの公式投稿APIがないため、本文と画像の生成・受け渡しまでを自動化し、最終公開だけはnote画面で行います。非公式APIやログインCookieは使用しません。
