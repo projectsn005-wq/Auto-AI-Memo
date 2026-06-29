@@ -2,6 +2,9 @@ name: E2E smoke test
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Deploy n8n workflows"]
+    types: [completed]
   push:
     branches: [main]
     paths:
@@ -14,6 +17,9 @@ concurrency:
 
 jobs:
   smoke:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
