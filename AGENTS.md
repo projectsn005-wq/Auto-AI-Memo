@@ -22,11 +22,14 @@
 | GitHub | Issue承認、PRレビュー、記事保管 |
 | Slack | 提案通知、採用操作、運用状況の共有 |
 | OpenAI Image API | note見出し画像の生成 |
+| Obsidian互換Markdown | AI外部記憶、判断履歴、生成物リンクの保管 |
+| 管理CSV | 記事No、状態、Issue/PR/noteリンクの一覧管理 |
 
 ## 記事
 
 - 記事は`articles/`へMarkdownで保存する。
 - 見出し画像は`articles/assets/`、noteへ渡す成果物は`note-package/`へ保存する。
+- AI外部記憶は`memory/articles/`、管理台帳は`admin/content-index.csv`へ保存する。
 - frontmatterには`id`、`title`、`category`、`version`、`review_status`、`public`、`post_to`を含める。
 - 捏造した体験談・実績・出典を入れない。
 - 結論を先に置き、抽象と具体を往復する。

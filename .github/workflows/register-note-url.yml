@@ -1,0 +1,55 @@
+name: Register published note URL
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'note URLを登録するIssue番号'
+        required: true
+        type: string
+      note_url:
+        description: '公開済みnote URL'
+        required: true
+        type: string
+
+concurrency:
+  group: register-note-url-${{ inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Register URL in memory and ledger
+        shell: bash
+        run: |
+          python3 scripts/register_note_url.py \
+            --issue-number "${{ inputs.issue_number }}" \
+            --note-url "${{ inputs.note_url }}"
+
+      - name: Publish update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="note-url/issue-${{ inputs.issue_number }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add admin/content-index.csv "memory/articles/issue-${{ inputs.issue_number }}.md"
+          git commit -m "chore: register note URL for issue #${{ inputs.issue_number }}"
+          auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" push --set-upstream origin "$branch"
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "note URL登録: issue #${{ inputs.issue_number }}" \
+            --body "公開済みnote URLを管理台帳とObsidian記憶へ反映します。"

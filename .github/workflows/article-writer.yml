@@ -107,6 +107,19 @@ jobs:
             "articles/assets/issue-${ISSUE_NUMBER}-cover.png" \
             "note-package/issue-${ISSUE_NUMBER}"
 
+      - name: Update Obsidian memory and management ledger
+        if: steps.guard.outputs.skip == 'false'
+        shell: bash
+        run: |
+          run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          python3 scripts/update_memory_index.py \
+            --issue-number "$ISSUE_NUMBER" \
+            --article "articles/issue-${ISSUE_NUMBER}-draft.md" \
+            --cover "articles/assets/issue-${ISSUE_NUMBER}-cover.png" \
+            --note-package "note-package/issue-${ISSUE_NUMBER}" \
+            --proposal-json ".codex-input/proposal.json" \
+            --run-url "$run_url"
+
       - name: Upload note package
         if: steps.guard.outputs.skip == 'false'
         uses: actions/upload-artifact@v4
@@ -131,13 +144,29 @@ jobs:
             "articles/issue-${ISSUE_NUMBER}-draft.md" \
             "articles/assets/issue-${ISSUE_NUMBER}-cover-prompt.txt" \
             "articles/assets/issue-${ISSUE_NUMBER}-cover.png" \
-            "note-package/issue-${ISSUE_NUMBER}"
+            "note-package/issue-${ISSUE_NUMBER}" \
+            "admin/content-index.csv" \
+            "memory/README.md" \
+            "memory/articles/issue-${ISSUE_NUMBER}.md"
           git commit -m "draft: article for issue #${ISSUE_NUMBER}"
           auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" push --set-upstream origin "$branch"
           title=$(gh issue view "$ISSUE_NUMBER" --json title --jq '.title' | sed 's/^\[提案\][[:space:]]*//')
           pr_url=$(gh pr create --base main --head "$branch" --title "[草稿] $title" --body "Issue #${ISSUE_NUMBER} の提案をCodexで記事化しました。\n\nCloses #${ISSUE_NUMBER}")
           run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          python3 scripts/update_memory_index.py \
+            --issue-number "$ISSUE_NUMBER" \
+            --article "articles/issue-${ISSUE_NUMBER}-draft.md" \
+            --cover "articles/assets/issue-${ISSUE_NUMBER}-cover.png" \
+            --note-package "note-package/issue-${ISSUE_NUMBER}" \
+            --proposal-json ".codex-input/proposal.json" \
+            --pr-url "$pr_url" \
+            --run-url "$run_url"
+          git add "admin/content-index.csv" "memory/articles/issue-${ISSUE_NUMBER}.md"
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: record draft PR for issue #${ISSUE_NUMBER}"
+            git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" push
+          fi
           gh issue comment "$ISSUE_NUMBER" --body "記事草稿・見出し画像・note投稿パッケージを作成しました。\n\nPR: $pr_url\nActions成果物: $run_url"
           echo "PR_URL=$pr_url" >> "$GITHUB_ENV"
           echo "RUN_URL=$run_url" >> "$GITHUB_ENV"
