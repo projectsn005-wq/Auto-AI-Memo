@@ -6,6 +6,7 @@
 
 - GitHubを正本とする。
 - `main`へ直接コミットしない。
+- Slack承認後の生成物PRとnote URL登録PRは、GitHub Actionsが自動マージしてよい。
 - Secret、APIキー、Webhook秘密値をコード・Issue・ログへ出さない。
 - AIプロバイダー固有処理は境界を明確にし、交換可能に保つ。
 - 未確認の外部動作を「動作確認済み」と報告しない。
@@ -23,7 +24,7 @@
 | Slack | 提案通知、採用操作、運用状況の共有 |
 | OpenAI Image API | note見出し画像の生成 |
 | Obsidian互換Markdown | AI外部記憶、判断履歴、生成物リンクの保管 |
-| 管理CSV | 記事No、状態、Issue/PR/noteリンクの一覧管理 |
+| 管理CSV / Google Sheets | 記事No、状態、Issue/PR/noteリンクの一覧管理 |
 
 ## 記事
 

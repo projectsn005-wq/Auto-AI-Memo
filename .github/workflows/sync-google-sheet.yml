@@ -1,0 +1,33 @@
+name: Sync content ledger to Google Sheets
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'admin/content-index.csv'
+      - 'scripts/sync_google_sheet.py'
+      - '.github/workflows/sync-google-sheet.yml'
+
+concurrency:
+  group: sync-content-ledger-google-sheet
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Google Sheets dependencies
+        run: python3 -m pip install --disable-pip-version-check google-api-python-client google-auth
+
+      - name: Sync Google Sheet
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_TAB: ${{ secrets.GOOGLE_SHEET_TAB }}
+          SHEET_GITHUB_BRANCH: main
+        run: python3 scripts/sync_google_sheet.py

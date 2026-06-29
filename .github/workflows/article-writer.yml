@@ -167,6 +167,11 @@ jobs:
             git commit -m "chore: record draft PR for issue #${ISSUE_NUMBER}"
             git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" push
           fi
+          gh pr merge "$pr_url" \
+            --squash \
+            --delete-branch \
+            --subject "draft: article for issue #${ISSUE_NUMBER}" \
+            --body "Slack承認後に記事草稿、noteパッケージ、Obsidian記憶、管理台帳を自動反映しました。"
           gh issue comment "$ISSUE_NUMBER" --body "記事草稿・見出し画像・note投稿パッケージを作成しました。\n\nPR: $pr_url\nActions成果物: $run_url"
           echo "PR_URL=$pr_url" >> "$GITHUB_ENV"
           echo "RUN_URL=$run_url" >> "$GITHUB_ENV"

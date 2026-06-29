@@ -48,8 +48,13 @@ jobs:
           git commit -m "chore: register note URL for issue #${{ inputs.issue_number }}"
           auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $auth" push --set-upstream origin "$branch"
-          gh pr create \
+          pr_url=$(gh pr create \
             --base main \
             --head "$branch" \
             --title "note URL登録: issue #${{ inputs.issue_number }}" \
-            --body "公開済みnote URLを管理台帳とObsidian記憶へ反映します。"
+            --body "公開済みnote URLを管理台帳とObsidian記憶へ反映します。")
+          gh pr merge "$pr_url" \
+            --squash \
+            --delete-branch \
+            --subject "chore: register note URL for issue #${{ inputs.issue_number }}" \
+            --body "note公開URLを自動反映しました。"
